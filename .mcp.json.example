@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "aws-infra-graph": {
+      "type": "http",
+      "url": "http://localhost:8050/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_MCP_AUTH_TOKEN>"
+      }
+    },
+    "aws-infra-graph-remote": {
+      "type": "http",
+      "url": "http://<ALB_DNS_NAME>/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_MCP_AUTH_TOKEN>"
+      }
+    }
+  }
+}

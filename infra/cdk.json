@@ -1,0 +1,18 @@
+{
+  "app": ".venv/bin/python app.py",
+  "context": {
+    "aws_profile": "your-aws-profile",
+    "account": "123456789012",
+    "region": "us-east-1",
+    "vpc_id": "vpc-0123456789abcdef0",
+    "private_subnet_ids": [
+      "subnet-0123456789abcdef0",
+      "subnet-0123456789abcdef1",
+      "subnet-0123456789abcdef2"
+    ],
+    "org_account_id": "111111111111",
+    "allowed_cidrs": ["10.0.0.0/8"],
+    "certificate_arn": "arn:aws:acm:us-east-1:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "cross_account_role_name": "InfraGraphRole"
+  }
+}

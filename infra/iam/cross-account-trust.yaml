@@ -1,0 +1,48 @@
+# CloudFormation StackSet template — deploy to all member accounts
+# Adds the ECS task role as a trusted principal on the cross-account read role.
+#
+# Deploy via StackSets from the management account:
+#   aws cloudformation create-stack-set \
+#     --stack-set-name infra-graph-trust \
+#     --template-body file://cross-account-trust.yaml \
+#     --parameters ParameterKey=EcsTaskRoleArn,ParameterValue=arn:aws:iam::ACCOUNT:role/... \
+#                  ParameterKey=CrossAccountRoleName,ParameterValue=SRETransientRole \
+#     --permission-model SERVICE_MANAGED \
+#     --auto-deployment Enabled=true,RetainStacksOnAccountRemoval=false
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Trust policy update for aws-infra-graph ECS task role
+
+Parameters:
+  EcsTaskRoleArn:
+    Type: String
+    Description: ARN of the ECS task role in the deployment account
+  CrossAccountRoleName:
+    Type: String
+    Default: InfraGraphReadRole
+    Description: Name of the read-only role in each member account
+
+Resources:
+  InfraGraphReadRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref CrossAccountRoleName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Ref EcsTaskRoleArn
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+      Policies:
+        - PolicyName: InfraGraphExtras
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - eks:CreateAccessEntry
+                  - eks:AssociateAccessPolicy
+                Resource: "*"

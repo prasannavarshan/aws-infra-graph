@@ -1,0 +1,39 @@
+[project]
+name = "infra-agent"
+version = "0.1.0"
+description = "AI agent harness for aws-infra-graph MCP server"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chainlit>=2.10.1",
+    "fastapi>=0.135.2",
+    "httpx>=0.28.1",
+    "litellm>=1.82.6",
+    "pydantic>=2.12.5",
+    "pydantic-ai>=1.72.0",
+    "pydantic-settings>=2.13.1",
+    "python-jose[cryptography]>=3.5.0",
+    "sse-starlette>=3.3.3",
+    "streamlit>=1.55.0",
+    "uvicorn>=0.42.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "hypothesis>=6.151.9",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.15.8",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]

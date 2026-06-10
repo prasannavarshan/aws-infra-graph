@@ -1,0 +1,60 @@
+# =============================================================================
+# infra-agent Docker Compose stack
+#
+# Usage:
+#   docker compose up --build
+#
+# Prerequisites:
+#   - Copy .env.example to .env and fill in required values
+#   - Neo4j: managed separately (brew services, standalone docker, or the
+#     root docker-compose.yml in the parent project)
+#   - MCP server: run separately or add as a service below
+# =============================================================================
+
+services:
+  infra-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: infra-agent
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      # Override MCP_SERVER_URL if the MCP server runs on the host
+      - MCP_SERVER_URL=${MCP_SERVER_URL:-http://host.docker.internal:8050}
+    restart: unless-stopped
+
+    # Uncomment for macOS/Windows Docker Desktop host networking:
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+  # -------------------------------------------------------------------
+  # Optional: Streamlit UI
+  # Uncomment to run the chat frontend alongside the agent.
+  # -------------------------------------------------------------------
+  # streamlit-ui:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: infra-agent-ui
+  #   ports:
+  #     - "8501:8501"
+  #   environment:
+  #     - AGENT_API_URL=http://infra-agent:8080
+  #   command: ["uv", "run", "streamlit", "run", "ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+  #   depends_on:
+  #     - infra-agent
+
+  # -------------------------------------------------------------------
+  # Optional: MCP server (if not running separately)
+  # Uncomment and adjust image/build context as needed.
+  # -------------------------------------------------------------------
+  # mcp-server:
+  #   image: aws-infra-graph-mcp:latest
+  #   ports:
+  #     - "8050:8050"
+  #   env_file:
+  #     - ../.env
+  #   restart: unless-stopped
