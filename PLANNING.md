@@ -399,3 +399,7 @@ At display time, `sg:sg-xxx` references in rules are enriched to `sg:sg-xxx (my-
 - Scheduled refresh via cron or Lambda
 - Web UI for graph visualization
 - Diagram generation (network topology, architecture diagrams)
+
+## Backlog
+
+- **CI/CD (GitHub Actions)**: Add workflows for automated testing on PRs (`uv run pytest`), linting (`uv run ruff check`), and optionally Docker image build validation. No secrets needed for the test suite — all tests use mocks.
