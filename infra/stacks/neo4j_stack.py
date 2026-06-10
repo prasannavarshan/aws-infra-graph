@@ -149,7 +149,9 @@ class Neo4jStack(cdk.Stack):
 
             # APOC permissions — Neo4j 5 requires apoc.* settings in apoc.conf
             "echo 'dbms.security.procedures.unrestricted=apoc.*' >> /etc/neo4j/neo4j.conf",
-            "printf 'apoc.export.file.enabled=true\\napoc.import.file.enabled=true\\n'"
+            # File I/O disabled — apoc.export/import via local filesystem is not needed
+            # and exposes the database to path traversal risks. Leave false for OSS deployments.
+            "printf 'apoc.export.file.enabled=false\\napoc.import.file.enabled=false\\n'"
             " > /etc/neo4j/apoc.conf",
             "chown neo4j:neo4j /etc/neo4j/apoc.conf",
 
@@ -174,7 +176,14 @@ class Neo4jStack(cdk.Stack):
             "systemctl daemon-reload",
 
             # ── Initial password (must run as neo4j user before first start) ──
-            "sudo -u neo4j neo4j-admin dbms set-initial-password changeme",
+            # NEO4J_INITIAL_PASSWORD must be injected as a UserData parameter from
+            # AWS Secrets Manager (e.g. via Systems Manager Parameter Store or
+            # CloudFormation dynamic references) before deploying this stack.
+            # Example: resolve at synth time with:
+            #   secretsmanager.Secret.from_secret_name_v2(...).secret_value.unsafe_unwrap()
+            # or use an SSM SecureString parameter and reference it here.
+            # NEVER hardcode this value in source control.
+            'sudo -u neo4j neo4j-admin dbms set-initial-password "${NEO4J_INITIAL_PASSWORD}"',
 
             # ── Start ─────────────────────────────────────────────────────────
             "systemctl enable neo4j",

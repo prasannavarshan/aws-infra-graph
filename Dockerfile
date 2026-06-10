@@ -8,7 +8,7 @@ RUN if [ -n "$CA_BUNDLE" ]; then \
       update-ca-certificates; \
     fi
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.5.21 /uv /usr/local/bin/uv
 
 WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
@@ -25,6 +25,9 @@ COPY ORG_KNOWLEDGE.md ./
 ENV PATH="/app/.venv/bin:$PATH"
 ENV TRANSPORT=http
 ENV PYTHONUNBUFFERED=1
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser
 
 EXPOSE 8050
 

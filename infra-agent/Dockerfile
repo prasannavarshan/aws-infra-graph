@@ -9,7 +9,7 @@
 # Stage 1: Install dependencies
 FROM python:3.12-slim AS builder
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.5.21 /uv /usr/local/bin/uv
 
 WORKDIR /app
 
@@ -32,6 +32,9 @@ COPY system_prompt.md ./
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser
 
 EXPOSE 8080
 

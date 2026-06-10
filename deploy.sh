@@ -68,8 +68,8 @@ echo ""
 echo "=== Build & Push ==="
 
 IMAGE_TAG="$ECR_URI/$ECR_REPO:latest"
-podman build -t "$IMAGE_TAG" --tls-verify=false .
-podman push "$IMAGE_TAG" --tls-verify=false
+podman build -t "$IMAGE_TAG" .
+podman push "$IMAGE_TAG"
 
 echo "Pushed: $IMAGE_TAG"
 

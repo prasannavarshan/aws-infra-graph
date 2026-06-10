@@ -15,6 +15,28 @@ def _get_app_context(ctx: Context):
     return ctx.request_context.lifespan_context
 
 
+# Allowlist of valid node labels — derived from NodeLabel enum in src/graph/model.py.
+# Any resource_type value NOT in this set is rejected before it reaches Cypher
+# to prevent label injection attacks.
+_VALID_LABELS: frozenset[str] = frozenset({
+    "Account", "VPC", "Subnet", "SecurityGroup", "EC2Instance",
+    "NetworkInterface", "IAMRole", "IAMPolicy", "IAMUser", "S3Bucket",
+    "RDSInstance", "LambdaFunction", "ECSCluster", "ECSService",
+    "EKSCluster", "EKSNodegroup", "NetworkACL", "LoadBalancer",
+    "TargetGroup", "Route53Zone", "Route53Record", "DynamoDBTable",
+    "SQSQueue", "SNSTopic", "CloudFrontDistribution", "APIGateway",
+    "VPCEndpoint", "TransitGateway", "TGWAttachment", "TGWRouteTable",
+    "CloudWANCoreNetwork", "CloudWANSegment", "CloudWANAttachment",
+    "RouteTable", "NATGateway", "InternetGateway", "VPCPeering",
+    "ElastiCacheCluster", "ElastiCacheReplicationGroup",
+    "ElastiCacheServerlessCache", "CloudFormationStack",
+    "OrganizationalUnit", "ServiceControlPolicy", "OpenSearchDomain",
+    "WAFWebACL", "ResolverEndpoint", "ResolverRule",
+    "CodeCommitRepo", "CodePipeline", "CodeBuildProject",
+    "K8sNamespace", "K8sDeployment", "K8sService",
+    "K8sServiceAccount", "K8sNode", "K8sIngress",
+})
+
 _VPC_NETWORKING_TYPES = frozenset({
     "NATGateway", "InternetGateway", "RouteTable", "VPCPeering",
 })
@@ -73,6 +95,12 @@ async def find_resources(
         Formatted list of matching resources with ARN, name,
         account, and region.
     """
+    if resource_type not in _VALID_LABELS:
+        return (
+            f"Invalid resource_type '{resource_type}'. "
+            f"Valid types: {', '.join(sorted(_VALID_LABELS))}"
+        )
+
     app = _get_app_context(ctx)
 
     where_clauses = []

@@ -33,11 +33,13 @@ class ScheduleStack(cdk.Stack):
         port = 443 if use_https else 80
         scheme = "https" if use_https else "http"
 
-        # Inject token at deploy time via CDK SecretValue — no runtime Secrets Manager
-        # call needed, which avoids needing a VPC endpoint or NAT gateway.
-        token_value = secretsmanager.Secret.from_secret_complete_arn(
-            self, "McpTokenSecret", mcp_token_secret_arn,
-        ).secret_value.unsafe_unwrap()
+        # The Lambda reads the auth token at runtime from Secrets Manager.
+        # This avoids resolving the secret at synth time (unsafe_unwrap) and
+        # keeps the plaintext token out of the CloudFormation template.
+        # The Lambda code calls:
+        #   boto3.client("secretsmanager").get_secret_value(
+        #       SecretId=os.environ["MCP_AUTH_TOKEN_SECRET_ARN"]
+        #   )["SecretString"]
 
         # Lambda SG — egress to ALB only (private VPC, no internet/NAT needed)
         lambda_sg = ec2.SecurityGroup(
@@ -48,6 +50,10 @@ class ScheduleStack(cdk.Stack):
         )
         lambda_sg.add_egress_rule(
             ec2.Peer.ipv4("10.0.0.0/8"), ec2.Port.tcp(port), "To ALB",
+        )
+        # Allow egress to Secrets Manager (HTTPS/443) — needed for runtime secret fetch
+        lambda_sg.add_egress_rule(
+            ec2.Peer.ipv4("0.0.0.0/0"), ec2.Port.tcp(443), "To Secrets Manager",
         )
 
         # Pin Lambda to the same private subnets as the ALB — avoids CDK picking
@@ -68,13 +74,18 @@ import urllib.request
 import urllib.error
 import ssl
 import os
+import json
+import boto3
 
 def handler(event, context):
-    token = os.environ["MCP_AUTH_TOKEN"]
+    # Fetch token at runtime — never stored in plaintext env var or template
+    secret_arn = os.environ["MCP_AUTH_TOKEN_SECRET_ARN"]
+    sm = boto3.client("secretsmanager")
+    token = sm.get_secret_value(SecretId=secret_arn)["SecretString"]
     alb_dns = os.environ["ALB_DNS_NAME"]
 
     url = f"{scheme}://{{alb_dns}}/refresh"
-    ctx = ssl._create_unverified_context() if "{scheme}" == "https" else None
+    ctx = ssl.create_default_context() if "{scheme}" == "https" else None
     req = urllib.request.Request(
         url,
         method="POST",
@@ -89,7 +100,7 @@ def handler(event, context):
         raise
 """),
             environment={
-                "MCP_AUTH_TOKEN": token_value,
+                "MCP_AUTH_TOKEN_SECRET_ARN": mcp_token_secret_arn,
                 "ALB_DNS_NAME": alb_dns_name,
             },
             timeout=cdk.Duration.seconds(30),
@@ -97,6 +108,12 @@ def handler(event, context):
             vpc_subnets=subnets,
             security_groups=[lambda_sg],
         )
+
+        # Grant Lambda read access to the MCP auth token secret at runtime
+        mcp_token_secret = secretsmanager.Secret.from_secret_complete_arn(
+            self, "McpTokenSecret", mcp_token_secret_arn,
+        )
+        mcp_token_secret.grant_read(refresh_fn)
 
         rule = events.Rule(
             self, "RefreshSchedule",

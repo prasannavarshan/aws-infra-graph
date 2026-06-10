@@ -7,15 +7,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os  # noqa: E402
-import ssl  # noqa: E402
 
-# Disable SSL verification globally when AWS_SSL_VERIFY=false.
-# Required for corporate networks with SSL-intercepting proxies.
-if os.getenv("AWS_SSL_VERIFY", "true").lower() == "false":
-    ssl._create_default_https_context = ssl._create_unverified_context
-    import urllib3  # noqa: E402
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    os.environ.setdefault("PYTHONHTTPSVERIFY", "0")
+# SSL verification is controlled per-client via the AWS_SSL_VERIFY config setting
+# (see src/config.py). Global SSL monkey-patching is intentionally omitted here —
+# it is insecure and inappropriate for OSS deployments.
 
 import src.logging_config  # noqa: F401, E402
 import contextlib  # noqa: E402

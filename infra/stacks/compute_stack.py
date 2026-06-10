@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import aws_cdk as cdk
 from aws_cdk import (
     aws_ec2 as ec2,
@@ -138,7 +140,14 @@ class ComputeStack(cdk.Stack):
                 actions=[
                     "organizations:List*",
                     "organizations:Describe*",
-                    "networkmanager:*",
+                    "networkmanager:GetCoreNetwork",
+                    "networkmanager:GetCoreNetworkPolicy",
+                    "networkmanager:ListCoreNetworks",
+                    "networkmanager:ListAttachments",
+                    "networkmanager:GetNetworkRoutes",
+                    "networkmanager:GetNetworkTelemetry",
+                    "networkmanager:ListSegmentGroups",
+                    "networkmanager:GetCoreNetworkChangeSet",
                 ],
                 resources=["*"],
             ),
@@ -166,11 +175,11 @@ class ComputeStack(cdk.Stack):
                 "TRANSPORT": "http",
                 "NEO4J_URI": f"bolt://{neo4j_host}:7687",
                 "NEO4J_USER": "neo4j",
-                "NEO4J_PASSWORD": "changeme",
+                "NEO4J_PASSWORD": os.environ.get("NEO4J_PASSWORD", ""),  # Set via Secrets Manager in production
                 "DEPLOY_ENV": "aws",
                 "AWS_DEFAULT_REGION": "us-east-1",
                 "AWS_CROSS_ACCOUNT_ROLE_NAME": cross_account_role_name,
-                "AWS_MGMT_ACCOUNT_ID": "123456789012",
+                "AWS_MGMT_ACCOUNT_ID": os.environ.get("AWS_MGMT_ACCOUNT_ID", ""),
                 "AWS_SSL_VERIFY": "true",
                 "AWS_REGIONS": '["us-east-1","us-west-2"]',
                 **({"AWS_ORG_ACCOUNT_ID": org_account_id} if org_account_id else {}),

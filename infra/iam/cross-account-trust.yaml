@@ -21,6 +21,13 @@ Parameters:
     Type: String
     Default: InfraGraphReadRole
     Description: Name of the read-only role in each member account
+  ExternalId:
+    Type: String
+    Description: >
+      A secret ExternalId that must be supplied when assuming this role.
+      Set this to a random unique value (e.g. a UUID) and configure the same
+      value in your aws-infra-graph deployment (AWS_CROSS_ACCOUNT_EXTERNAL_ID).
+      This prevents confused-deputy attacks from other principals in your org.
 
 Resources:
   InfraGraphReadRole:
@@ -34,6 +41,9 @@ Resources:
             Principal:
               AWS: !Ref EcsTaskRoleArn
             Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref ExternalId
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/ReadOnlyAccess
       Policies:

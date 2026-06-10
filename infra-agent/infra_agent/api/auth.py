@@ -6,7 +6,9 @@ from typing import Annotated
 import httpx
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
+from joserfc import jwt
+from joserfc.errors import JoseError
+from joserfc.jwk import KeySet
 
 from infra_agent.config import Settings
 
@@ -122,15 +124,17 @@ async def get_current_user(
 
     token = credentials.credentials
     try:
-        jwks = await _fetch_jwks(settings.OIDC_ISSUER_URL)  # type: ignore[arg-type]
-        claims = jwt.decode(
-            token,
-            jwks,
-            algorithms=["RS256"],
-            audience=settings.OIDC_AUDIENCE,  # type: ignore[arg-type]
-            issuer=settings.OIDC_ISSUER_URL,
+        jwks_data = await _fetch_jwks(settings.OIDC_ISSUER_URL)  # type: ignore[arg-type]
+        key_set = KeySet.import_key_set(jwks_data)
+        decoded = jwt.decode(token, key_set)
+        # Validate standard claims manually (joserfc separates decode from claim validation)
+        claims = decoded.claims
+        claims_requests = jwt.JWTClaimsRegistry(
+            iss={"essential": True, "value": settings.OIDC_ISSUER_URL},
+            aud={"essential": True, "value": settings.OIDC_AUDIENCE},
         )
-    except JWTError as exc:
+        claims_requests.validate(claims)
+    except JoseError as exc:
         logger.warning("JWT validation failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
