@@ -283,7 +283,7 @@ class TestParseRoutes:
 
     def test_parse_tgw_route(self):
         routes = _parse_routes(
-            "10.150.0.0/16 -> tgw-abc123"
+            "10.0.0.0/16 -> tgw-abc123"
         )
         assert len(routes) == 1
         assert routes[0]["target"] == "tgw-abc123"
@@ -331,10 +331,10 @@ class TestCheckRouteAllows:
     def test_tgw_route_returns_tgw_id(self):
         """Route targeting a TGW should return its ID."""
         routes = _parse_routes(
-            "10.150.0.0/16 -> tgw-0abc123"
+            "10.0.0.0/16 -> tgw-0abc123"
         )
         found, reason, tgw_id, is_local = _check_route_allows(
-            routes, "10.150.1.5",
+            routes, "10.0.1.5",
         )
         assert found is True
         assert tgw_id == "tgw-0abc123"
@@ -375,13 +375,13 @@ class TestCheckTGWRoute:
                     "rt_id": "tgw-rtb-001",
                     "rt_name": "main-rt",
                     "routes": (
-                        "10.150.0.0/16 -> tgw-attach-abc;"
+                        "10.0.0.0/16 -> tgw-attach-abc;"
                         " 10.160.0.0/16 -> tgw-attach-def"
                     ),
                 }]
 
         found, lines = await _check_tgw_route(
-            MockNeo4j(), "tgw-0abc", "10.150.1.5",
+            MockNeo4j(), "tgw-0abc", "10.0.1.5",
         )
         assert found is True
         assert any("TGW ROUTE EXISTS" in line for line in lines)
@@ -394,7 +394,7 @@ class TestCheckTGWRoute:
                 return [{
                     "rt_id": "tgw-rtb-001",
                     "rt_name": "main-rt",
-                    "routes": "10.150.0.0/16 -> tgw-attach-abc",
+                    "routes": "10.0.0.0/16 -> tgw-attach-abc",
                 }]
 
         found, lines = await _check_tgw_route(

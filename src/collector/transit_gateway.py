@@ -31,7 +31,7 @@ def _tag_name(tags: dict[str, str], fallback: str = "") -> str:
 def _summarize_tgw_routes(routes: list[dict]) -> str:
     """Summarize TGW routes into a compact string.
 
-    Format: '10.0.0.0/8 -> tgw-attach-xxx; 10.150.0.0/16 -> tgw-attach-yyy'
+    Format: '10.0.0.0/8 -> tgw-attach-xxx; 10.0.0.0/16 -> tgw-attach-yyy'
     Skips blackhole routes.
     """
     parts = []

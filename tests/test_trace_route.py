@@ -547,9 +547,9 @@ class TestResolveSource:
         """CIDR match should win over VPN fallback when the
         VPN inference is not definitive.
 
-        10.150.36.137 is a VPC IP (CIDR match →
+        10.0.36.137 is a VPC IP (CIDR match →
         SegmentDevelopment). VPN inference finds a propagated
-        route in SegmentSharedWAN covering 10.150.32.0/20 but
+        route in SegmentSharedWAN covering 10.0.32.0/20 but
         the route's attachment is NOT a local VPN — it's a
         fallback. CIDR match should win.
         """
@@ -564,7 +564,7 @@ class TestResolveSource:
                     "name": "dev-vpc",
                     "arn": "arn:vpc:dev",
                     "vpc_id": "vpc-dev",
-                    "cidr_block": "10.150.32.0/20",
+                    "cidr_block": "10.0.32.0/20",
                 }]
             # CloudWAN attachment for VPC
             if (
@@ -600,10 +600,10 @@ class TestResolveSource:
 
         def _mock_fetch(neo4j, segment_name, **kwargs):
             """SegmentSharedWAN has a propagated route for
-            10.150.32.0/20 but via a VPC attachment, not a
+            10.0.32.0/20 but via a VPC attachment, not a
             local VPN attachment."""
             return [{
-                "DestinationCidrBlock": "10.150.32.0/20",
+                "DestinationCidrBlock": "10.0.32.0/20",
                 "Type": "propagated",
                 "State": "active",
                 "Destinations": [{
@@ -618,7 +618,7 @@ class TestResolveSource:
             side_effect=_mock_fetch,
         ):
             result = await resolve_source(
-                neo4j, "10.150.36.137", "",
+                neo4j, "10.0.36.137", "",
             )
         assert result is not None
         # Should pick SegmentDevelopment (CIDR match), NOT
@@ -1343,13 +1343,13 @@ class TestOnPremDestination:
         ):
             ip = (params or {}).get("ip", "")
             # Source resolves via exact IP
-            if "private_ip" in cypher and ip == "10.150.36.137":
+            if "private_ip" in cypher and ip == "10.0.36.137":
                 return [{
                     "name": "dev-server",
                     "arn": "arn:ec2:dev",
                     "labels": ["EC2Instance"],
                     "subnet_name": "sub-dev",
-                    "subnet_cidr": "10.150.32.0/20",
+                    "subnet_cidr": "10.0.32.0/20",
                     "vpc_name": "dev-vpc",
                     "vpc_arn": "arn:vpc:dev",
                     "vpc_id": "vpc-dev",
@@ -1404,7 +1404,7 @@ class TestOnPremDestination:
                 }]
             if segment_name == "SegmentSharedWAN":
                 return [{
-                    "DestinationCidrBlock": "10.150.0.0/16",
+                    "DestinationCidrBlock": "10.0.0.0/16",
                     "Type": "propagated",
                     "State": "active",
                     "Destinations": [{
@@ -1420,7 +1420,7 @@ class TestOnPremDestination:
             side_effect=_mock_routes,
         ):
             result = await trace_route(
-                ctx, "10.150.36.137", "10.126.12.90",
+                ctx, "10.0.36.137", "10.126.12.90",
             )
 
         assert "Forward Path" in result

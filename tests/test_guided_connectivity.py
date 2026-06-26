@@ -755,22 +755,22 @@ class TestEksPodCidr:
         )
         tgt_sgs = [_make_sg_row(
             group_id="sg-tgt",
-            ingress="tcp:443 from 10.150.32.0/20",
+            ingress="tcp:443 from 10.0.32.0/20",
         )]
         # lookup_eks_pod_cidr query
         neo4j.query = AsyncMock(side_effect=[
-            [{"secondary_cidrs": ["100.67.0.0/16"]}],
-            [{"primary": "10.150.32.0/20",
-              "secondary": ["100.67.0.0/16"]}],
+            [{"secondary_cidrs": ["192.168.1.0/24"]}],
+            [{"primary": "10.0.32.0/20",
+              "secondary": ["192.168.1.0/24"]}],
         ])
         note, pod_ip = await _evaluate_eks_pod_cidr(
-            neo4j, source, "10.150.41.5",
+            neo4j, source, "10.0.32.5",
             tgt_sgs, 443, "tcp", frozenset({"sg-src"}),
         )
         assert "DENIED" in note
-        assert "100.67.0.0/16" in note
+        assert "192.168.1.0/24" in note
         assert "no SNAT" in note
-        assert pod_ip == "100.67.0.1"
+        assert pod_ip == "192.168.1.1"
 
     @pytest.mark.asyncio
     async def test_pod_cidr_allowed_in_vpc(self):
@@ -784,21 +784,21 @@ class TestEksPodCidr:
         tgt_sgs = [_make_sg_row(
             group_id="sg-tgt",
             ingress=(
-                "tcp:443 from 10.150.32.0/20;"
-                " tcp:443 from 100.67.0.0/16"
+                "tcp:443 from 10.0.32.0/20;"
+                " tcp:443 from 192.168.1.0/24"
             ),
         )]
         neo4j.query = AsyncMock(side_effect=[
-            [{"secondary_cidrs": ["100.67.0.0/16"]}],
-            [{"primary": "10.150.32.0/20",
-              "secondary": ["100.67.0.0/16"]}],
+            [{"secondary_cidrs": ["192.168.1.0/24"]}],
+            [{"primary": "10.0.32.0/20",
+              "secondary": ["192.168.1.0/24"]}],
         ])
         note, pod_ip = await _evaluate_eks_pod_cidr(
-            neo4j, source, "10.150.41.5",
+            neo4j, source, "10.0.32.5",
             tgt_sgs, 443, "tcp", frozenset({"sg-src"}),
         )
         assert "ALLOWED" in note
-        assert pod_ip == "100.67.0.1"
+        assert pod_ip == "192.168.1.1"
 
     @pytest.mark.asyncio
     async def test_snat_target_outside_vpc(self):
@@ -811,9 +811,9 @@ class TestEksPodCidr:
         )
         tgt_sgs = [_make_sg_row(group_id="sg-tgt")]
         neo4j.query = AsyncMock(side_effect=[
-            [{"secondary_cidrs": ["100.67.0.0/16"]}],
-            [{"primary": "10.150.32.0/20",
-              "secondary": ["100.67.0.0/16"]}],
+            [{"secondary_cidrs": ["192.168.1.0/24"]}],
+            [{"primary": "10.0.32.0/20",
+              "secondary": ["192.168.1.0/24"]}],
         ])
         # Target IP is outside VPC CIDRs (on-prem)
         note, pod_ip = await _evaluate_eks_pod_cidr(
@@ -838,7 +838,7 @@ class TestEksPodCidr:
             [{"secondary_cidrs": ["10.1.0.0/16"]}],
         ])
         note, pod_ip = await _evaluate_eks_pod_cidr(
-            neo4j, source, "10.150.41.5",
+            neo4j, source, "10.0.32.5",
             tgt_sgs, 443, "tcp", frozenset({"sg-src"}),
         )
         assert note == ""

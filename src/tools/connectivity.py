@@ -58,7 +58,7 @@ async def get_tgw_routes(
             (e.g. "tgw-rtb-0abc123"). If provided, only
             that route table is shown.
         target_ip: Optional IP to filter routes by longest
-            prefix match (e.g. "10.150.1.5"). Shows only
+            prefix match (e.g. "10.0.1.5"). Shows only
             the best matching route per table.
 
     Returns:

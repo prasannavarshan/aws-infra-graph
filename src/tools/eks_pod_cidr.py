@@ -25,7 +25,7 @@ async def lookup_eks_pod_cidr(
         cluster_arn: EKS cluster ARN.
 
     Returns:
-        Pod CIDR string (e.g., "100.67.0.0/16") or None if
+        Pod CIDR string (e.g., "192.168.1.0.0/16") or None if
         no secondary CIDR in the 100.64.0.0/10 range found.
     """
     query = """
@@ -77,7 +77,7 @@ async def lookup_vpc_cidrs(
 
     Returns:
         List of CIDR strings, e.g.,
-        ["10.150.32.0/20", "100.67.0.0/16"].
+        ["10.0.32.0/20", "192.168.1.0.0/16"].
     """
     query = """
     MATCH (c:EKSCluster {arn: $arn})
@@ -138,10 +138,10 @@ def pick_sample_pod_ip(pod_cidr: str) -> str:
     Returns the first usable host address in the network.
 
     Args:
-        pod_cidr: CIDR string (e.g., "100.67.0.0/16").
+        pod_cidr: CIDR string (e.g., "192.168.1.0.0/16").
 
     Returns:
-        IP string (e.g., "100.67.0.1"), or empty string
+        IP string (e.g., "192.168.1.0.1"), or empty string
         if the CIDR is invalid.
     """
     try:

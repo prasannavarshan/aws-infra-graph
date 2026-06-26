@@ -318,8 +318,8 @@ VPC nodes and Subnet nodes store different CIDR data, and different tools surfac
 
 ### Data Model
 
-- **VPC node**: `cidr_block` (primary, e.g. `10.150.32.0/20`) + `secondary_cidrs` (list, e.g. `["100.67.0.0/16"]`)
-- **Subnet node**: `cidr_block` (single subnet CIDR, e.g. `100.67.0.0/18`)
+- **VPC node**: `cidr_block` (primary, e.g. `10.0.0.0/20`) + `secondary_cidrs` (list, e.g. `["192.168.0.0/16"]`)
+- **Subnet node**: `cidr_block` (single subnet CIDR, e.g. `192.168.0.0/18`)
 
 Secondary CIDRs are VPC-level associations from `CidrBlockAssociationSet`. Subnets are carved from those CIDRs (e.g. a `/16` VPC CIDR split into three `/18` subnets).
 
@@ -336,8 +336,8 @@ Secondary CIDRs are VPC-level associations from `CidrBlockAssociationSet`. Subne
 `get_vpc_topology` does NOT show VPC `secondary_cidrs` — it shows subnet CIDRs. An agent interpreting the topology output may report three `/18` subnets when the actual VPC has two secondary CIDRs (`/17` + `/18`). Both are correct views of the same data at different levels:
 
 ```
-VPC secondary CIDR: 100.78.0.0/17          → Subnets: 100.78.0.0/18, 100.78.64.0/18
-VPC secondary CIDR: 100.78.128.0/18        → Subnet:  100.78.128.0/18
+VPC secondary CIDR: 192.168.0.0/17          → Subnets: 192.168.0.0/18, 192.168.64.0/18
+VPC secondary CIDR: 192.168.128.0/18        → Subnet:  192.168.128.0/18
 ```
 
 For pod CIDR evaluation, `lookup_vpc_cidrs` uses the VPC-level `secondary_cidrs` (not subnet CIDRs), which is the correct granularity for SNAT and ingress rule matching.

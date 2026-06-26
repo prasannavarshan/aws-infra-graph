@@ -153,20 +153,20 @@ class TestLookupSampleIp:
     @pytest.mark.asyncio
     async def test_returns_ip_when_found(self):
         neo4j = AsyncMock()
-        neo4j.query.return_value = [{"ip": "10.150.170.42"}]
+        neo4j.query.return_value = [{"ip": "10.0.170.42"}]
         ip = await _lookup_sample_ip(neo4j, "sg-abc123")
-        assert ip == "10.150.170.42"
+        assert ip == "10.0.170.42"
 
     @pytest.mark.asyncio
     async def test_vpc_fallback_when_no_direct_match(self):
         """Falls back to VPC-based lookup when no HAS_SG match."""
         neo4j = AsyncMock()
         # First query (direct SG) returns empty, second (VPC) finds IP
-        neo4j.query.side_effect = [[], [{"ip": "10.150.170.99"}]]
+        neo4j.query.side_effect = [[], [{"ip": "10.0.170.99"}]]
         ip = await _lookup_sample_ip(
             neo4j, "sg-orphan", vpc_id="vpc-123",
         )
-        assert ip == "10.150.170.99"
+        assert ip == "10.0.170.99"
         assert neo4j.query.call_count == 2
 
     @pytest.mark.asyncio
@@ -258,9 +258,9 @@ class TestCheckSGConnectivity:
             name="redis-sg",
             ingress="tcp:6379 from 10.0.0.0/8",
         )
-        # Source IP 10.150.170.42 is in 10.0.0.0/8
+        # Source IP 10.0.170.42 is in 10.0.0.0/8
         neo4j.query.side_effect = _side_effect(
-            source, target, src_ip="10.150.170.42",
+            source, target, src_ip="10.0.170.42",
         )
         ctx = self._make_ctx(neo4j)
 
@@ -269,7 +269,7 @@ class TestCheckSGConnectivity:
             live_refresh=False,
         )
         assert "Verdict: ALLOWED" in result
-        assert "sample IP: 10.150.170.42" in result
+        assert "sample IP: 10.0.170.42" in result
 
     @pytest.mark.asyncio
     async def test_denied_cidr_no_ip_shows_note(self):
@@ -366,8 +366,8 @@ class TestCheckSGConnectivity:
         )
         neo4j.query.side_effect = _side_effect(
             source, target,
-            src_ip="10.150.170.42",
-            tgt_ip="10.150.170.210",
+            src_ip="10.0.170.42",
+            tgt_ip="10.0.170.210",
         )
         ctx = self._make_ctx(neo4j)
 
@@ -382,7 +382,7 @@ class TestCheckSGConnectivity:
         assert "sg-eks" in result
         assert "sg-redis" in result
         assert "vpc-shared" in result
-        assert "sample IP: 10.150.170.42" in result
+        assert "sample IP: 10.0.170.42" in result
 
     @pytest.mark.asyncio
     async def test_source_not_found(self):
@@ -477,11 +477,11 @@ class TestFormatVerdict:
             True, "all:all from 0.0.0.0/0",
             True, "tcp:443 from 10.0.0.0/8",
             cross_vpc=False,
-            source_ip="10.150.1.1",
-            target_ip="10.150.2.2",
+            source_ip="10.0.1.1",
+            target_ip="10.0.2.2",
         )
-        assert "sample IP: 10.150.1.1" in output
-        assert "sample IP: 10.150.2.2" in output
+        assert "sample IP: 10.0.1.1" in output
+        assert "sample IP: 10.0.2.2" in output
 
 
 class TestDedupByGroupId:

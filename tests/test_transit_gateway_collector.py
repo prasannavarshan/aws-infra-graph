@@ -290,7 +290,7 @@ class TestSummarizeTGWRoutes:
                 }],
             },
             {
-                "DestinationCidrBlock": "10.150.0.0/16",
+                "DestinationCidrBlock": "10.0.0.0/16",
                 "TransitGatewayAttachments": [{
                     "TransitGatewayAttachmentId": "tgw-attach-b",
                 }],
@@ -298,7 +298,7 @@ class TestSummarizeTGWRoutes:
         ]
         result = _summarize_tgw_routes(routes)
         assert "10.0.0.0/8 -> tgw-attach-a" in result
-        assert "10.150.0.0/16 -> tgw-attach-b" in result
+        assert "10.0.0.0/16 -> tgw-attach-b" in result
 
     def test_no_attachments_shows_blackhole(self):
         routes = [{
@@ -318,7 +318,7 @@ class TestTGWRouteTableRoutes:
     def test_route_table_has_routes_property(self):
         """Route table node should have routes from search API."""
         tgw_routes = [{
-            "DestinationCidrBlock": "10.150.0.0/16",
+            "DestinationCidrBlock": "10.0.0.0/16",
             "TransitGatewayAttachments": [{
                 "TransitGatewayAttachmentId": "tgw-attach-abc",
             }],
@@ -333,7 +333,7 @@ class TestTGWRouteTableRoutes:
             if n.label.value == "TGWRouteTable"
         ]
         assert len(rt_nodes) == 1
-        assert "10.150.0.0/16 -> tgw-attach-abc" in (
+        assert "10.0.0.0/16 -> tgw-attach-abc" in (
             rt_nodes[0].properties["routes"]
         )
 
