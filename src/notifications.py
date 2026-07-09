@@ -1,4 +1,4 @@
-"""GChat webhook notifications — fire-and-forget, never raises."""
+"""Webhook notifications — fire-and-forget, never raises."""
 
 from __future__ import annotations
 
@@ -12,13 +12,13 @@ from src.config import settings
 logger = logging.getLogger(__name__)
 
 
-def notify_gchat(text: str) -> None:
-    """POST a plain-text message to the configured GChat webhook.
+def notify_webhook(text: str) -> None:
+    """POST a plain-text message to the configured notification webhook.
 
-    Reads GCHAT_WEBHOOK_URL from ServerConfig (env: MCP_GCHAT_WEBHOOK_URL).
+    Reads webhook_url from ServerConfig (env: MCP_WEBHOOK_URL).
     Silently logs and returns if the URL is not configured or the POST fails.
     """
-    url = settings.server.gchat_webhook_url
+    url = settings.server.webhook_url
     if not url:
         return
 
@@ -32,6 +32,6 @@ def notify_gchat(text: str) -> None:
     try:
         urllib.request.urlopen(req, timeout=10)
     except urllib.error.URLError as exc:
-        logger.warning("gchat_notify_failed url_error=%s", exc)
+        logger.warning("webhook_notify_failed url_error=%s", exc)
     except Exception as exc:
-        logger.warning("gchat_notify_failed error=%s", exc)
+        logger.warning("webhook_notify_failed error=%s", exc)

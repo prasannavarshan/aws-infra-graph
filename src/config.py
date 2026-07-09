@@ -39,7 +39,7 @@ class ServerConfig(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8050
     auth_token: str = ""
-    gchat_webhook_url: str = ""  # set via MCP_GCHAT_WEBHOOK_URL
+    webhook_url: str = ""  # set via MCP_WEBHOOK_URL
 
     model_config = {"env_prefix": "MCP_"}
 

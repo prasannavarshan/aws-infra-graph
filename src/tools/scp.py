@@ -24,7 +24,7 @@ async def get_effective_scps(
     Args:
         account_id: AWS account ID (12-digit). Use find_accounts
             to resolve a name to an account ID.
-        ou_name: OU name (e.g. "SLG-Prod", "Security"). Used
+        ou_name: OU name (e.g. "Workloads-Prod", "Security"). Used
             instead of account_id to check SCPs on an OU directly.
             Provide either account_id or ou_name, not both.
 

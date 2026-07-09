@@ -68,9 +68,9 @@ class ComputeStack(cdk.Stack):
                 password_length=48,
             ),
         )
-        gchat_webhook_secret = secretsmanager.Secret.from_secret_name_v2(
-            self, "GChatWebhook",
-            secret_name="aws-infra-graph/gchat-webhook",
+        webhook_secret = secretsmanager.Secret.from_secret_name_v2(
+            self, "NotificationWebhook",
+            secret_name="aws-infra-graph/notification-webhook",
         )
 
         # --- Security Groups ---
@@ -186,7 +186,7 @@ class ComputeStack(cdk.Stack):
             },
             secrets={
                 "MCP_AUTH_TOKEN": ecs.Secret.from_secrets_manager(mcp_token_secret),
-                "MCP_GCHAT_WEBHOOK_URL": ecs.Secret.from_secrets_manager(gchat_webhook_secret),
+                "MCP_WEBHOOK_URL": ecs.Secret.from_secrets_manager(webhook_secret),
             },
             logging=ecs.LogDrivers.aws_logs(
                 stream_prefix="mcp", log_group=log_group,

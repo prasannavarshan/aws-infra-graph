@@ -47,7 +47,7 @@ class TestReportIssue:
             tool_name="find_resources",
             description="Returned zero results for EC2 in us-west-2",
             severity="high",
-            query_context="account=sling-prod, type=EC2Instance",
+            query_context="account=app-prod, type=EC2Instance",
         )
         assert "issue-" in result
         assert "find_resources" in result
@@ -59,7 +59,7 @@ class TestReportIssue:
         assert params["tool_name"] == "find_resources"
         assert params["description"] == "Returned zero results for EC2 in us-west-2"
         assert params["severity"] == "high"
-        assert params["query_context"] == "account=sling-prod, type=EC2Instance"
+        assert params["query_context"] == "account=app-prod, type=EC2Instance"
 
     @pytest.mark.asyncio
     async def test_report_issue_default_severity(self):
@@ -120,7 +120,7 @@ class TestListIssues:
                     "description": "Missing EC2 instances in us-west-2",
                     "severity": "high",
                     "status": "open",
-                    "query_context": "account=sling-prod",
+                    "query_context": "account=app-prod",
                     "created_at": "2026-03-25T12:00:00Z",
                 },
             ]
@@ -131,7 +131,7 @@ class TestListIssues:
         assert "find_resources" in result
         assert "HIGH" in result
         assert "Missing EC2 instances" in result
-        assert "account=sling-prod" in result
+        assert "account=app-prod" in result
 
     @pytest.mark.asyncio
     async def test_list_issues_filter_by_tool(self):

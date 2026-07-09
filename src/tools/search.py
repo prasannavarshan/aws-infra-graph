@@ -527,7 +527,7 @@ async def find_accounts(
     """Find AWS accounts by name (fuzzy substring match).
 
     Use this tool first to resolve an account name or nickname
-    (e.g., "slingcore beta", "prod network") into an account ID
+    (e.g., "prod app", "prod network") into an account ID
     that can be passed to other tools.
 
     Args:

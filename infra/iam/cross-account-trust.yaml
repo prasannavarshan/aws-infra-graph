@@ -6,7 +6,7 @@
 #     --stack-set-name infra-graph-trust \
 #     --template-body file://cross-account-trust.yaml \
 #     --parameters ParameterKey=EcsTaskRoleArn,ParameterValue=arn:aws:iam::ACCOUNT:role/... \
-#                  ParameterKey=CrossAccountRoleName,ParameterValue=SRETransientRole \
+#                  ParameterKey=CrossAccountRoleName,ParameterValue=InfraGraphCrossAccountRole \
 #     --permission-model SERVICE_MANAGED \
 #     --auto-deployment Enabled=true,RetainStacksOnAccountRemoval=false
 

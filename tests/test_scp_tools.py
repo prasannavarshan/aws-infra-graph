@@ -127,9 +127,9 @@ class TestGetEffectiveSCPs:
         }]
         ctx = _make_ctx([ou_result, direct, inherited])
         result = await get_effective_scps(
-            ctx, ou_name="SLG-Prod",
+            ctx, ou_name="Workloads-Prod",
         )
-        assert "SLG-Prod" in result
+        assert "Workloads-Prod" in result
         assert "Level2SCP" in result
         assert "FullAWSAccess" in result
         assert "Total: 2" in result

@@ -37,7 +37,7 @@ from src.collector import (
     WAFCollector,
 )
 from src.graph.builder import GraphBuilder
-from src.notifications import notify_gchat
+from src.notifications import notify_webhook
 from src.tools.refresh_state import refresh_state
 
 logger = logging.getLogger(__name__)
@@ -133,7 +133,7 @@ async def run_refresh(
         logger.info("refresh_complete: %s", summary)
 
         status = "❌ partial" if failed else "✅"
-        notify_gchat(
+        notify_webhook(
             f"*[infra-graph] Graph refresh complete {status}*\n"
             f"Duration: {elapsed}\n"
             f"Accounts: {acct_str}\n"
@@ -147,7 +147,7 @@ async def run_refresh(
         error_str = str(exc)
         refresh_state.fail(error_str)
         logger.error("refresh_failed: %s", exc)
-        notify_gchat(
+        notify_webhook(
             f"*[infra-graph] Graph refresh failed ❌*\n"
             f"Duration: {elapsed}\n"
             f"Error: `{error_str[:300]}`\n"

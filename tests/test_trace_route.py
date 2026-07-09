@@ -103,7 +103,7 @@ class TestResolveDestination:
                 }]
             if "CloudWANAttachment" in cypher:
                 return [{
-                    "seg_name": "SLINGCoreBeta",
+                    "seg_name": "AppCoreBeta",
                     "seg_arn": "arn:seg:1",
                     "att_id": "att-vpc-456",
                 }]
@@ -115,7 +115,7 @@ class TestResolveDestination:
         )
         assert result is not None
         assert result["resource_name"] == "web-server-01"
-        assert result["segment_name"] == "SLINGCoreBeta"
+        assert result["segment_name"] == "AppCoreBeta"
         assert result["attachment_id"] == "att-vpc-456"
 
     @pytest.mark.asyncio
@@ -141,7 +141,7 @@ class TestResolveDestination:
                 ]
             if "CloudWANAttachment" in cypher:
                 return [{
-                    "seg_name": "SLINGCoreBeta",
+                    "seg_name": "AppCoreBeta",
                     "seg_arn": "arn:seg:1",
                     "att_id": "att-vpc-b",
                 }]
@@ -153,7 +153,7 @@ class TestResolveDestination:
         )
         assert result is not None
         assert result["vpc_name"] == "vpc-b"
-        assert result["segment_name"] == "SLINGCoreBeta"
+        assert result["segment_name"] == "AppCoreBeta"
 
     @pytest.mark.asyncio
     async def test_secondary_cidr_match(self):
@@ -209,7 +209,7 @@ class TestResolveDestination:
                 ]
             if "CloudWANAttachment" in cypher:
                 return [{
-                    "seg_name": "SLINGCoreBeta",
+                    "seg_name": "AppCoreBeta",
                     "seg_arn": "arn:seg:1",
                     "att_id": "att-vpc-b",
                 }]
@@ -272,7 +272,7 @@ class TestResolveSource:
                 }]
             if "CloudWANAttachment" in cypher:
                 return [{
-                    "seg_name": "SLINGDev",
+                    "seg_name": "AppDev",
                     "seg_arn": "arn:seg:dev",
                     "att_id": "att-dev-1",
                 }]
@@ -283,7 +283,7 @@ class TestResolveSource:
             neo4j, "10.128.5.10", "",
         )
         assert result is not None
-        assert result["segment_name"] == "SLINGDev"
+        assert result["segment_name"] == "AppDev"
 
     @pytest.mark.asyncio
     async def test_with_segment_hint(self):
@@ -878,7 +878,7 @@ class TestFormatTrace:
             "vpc_id": "vpc-123",
             "subnet_name": "sub-a",
             "subnet_cidr": "10.127.32.0/20",
-            "segment_name": "SLINGCoreBeta",
+            "segment_name": "AppCoreBeta",
             "attachment_id": "att-vpc-2",
         }
         fwd_hops = [
@@ -890,7 +890,7 @@ class TestFormatTrace:
                 "state": "active",
             },
             {
-                "segment": "SLINGCoreBeta",
+                "segment": "AppCoreBeta",
                 "cidr": "destination",
                 "route_type": "destination",
                 "attachment_id": "",
@@ -899,7 +899,7 @@ class TestFormatTrace:
         ]
         ret_hops = [
             {
-                "segment": "SLINGCoreBeta",
+                "segment": "AppCoreBeta",
                 "cidr": "10.200.0.0/16",
                 "route_type": "propagated",
                 "attachment_id": "att-2",
@@ -921,7 +921,7 @@ class TestFormatTrace:
         assert "Forward Path" in output
         assert "Return Path" in output
         assert "OnPremShared" in output
-        assert "SLINGCoreBeta" in output
+        assert "AppCoreBeta" in output
         assert "10.200.5.42" in output
         assert "10.127.33.15" in output
 
@@ -1082,7 +1082,7 @@ class TestTraceRoute:
                         "labels": ["LoadBalancer"],
                         "subnet_name": "sub-a",
                         "subnet_cidr": "10.127.32.0/20",
-                        "vpc_name": "SLINGCoreBeta-VPC",
+                        "vpc_name": "AppCoreBeta-VPC",
                         "vpc_arn": "arn:vpc:beta",
                         "vpc_id": "vpc-beta",
                     }]
@@ -1096,7 +1096,7 @@ class TestTraceRoute:
                 and "ATTACHED_TO" in cypher
             ):
                 return [{
-                    "seg_name": "SLINGCoreBeta",
+                    "seg_name": "AppCoreBeta",
                     "seg_arn": "arn:seg:beta",
                     "att_id": "att-vpc-456",
                 }]
@@ -1130,10 +1130,10 @@ class TestTraceRoute:
                     "Destinations": [{
                         "CoreNetworkAttachmentId":
                             "att-vpc-456",
-                        "SegmentName": "SLINGCoreBeta",
+                        "SegmentName": "AppCoreBeta",
                     }],
                 }]
-            if segment_name == "SLINGCoreBeta":
+            if segment_name == "AppCoreBeta":
                 return [{
                     "DestinationCidrBlock": "10.200.0.0/16",
                     "Type": "propagated",
@@ -1161,7 +1161,7 @@ class TestTraceRoute:
         assert "Forward Path" in result
         assert "Return Path" in result
         assert "OnPremShared" in result
-        assert "SLINGCoreBeta" in result
+        assert "AppCoreBeta" in result
         assert "10.200.5.42" in result
         assert "10.127.33.15" in result
         assert "alb-prod" in result
@@ -1189,7 +1189,7 @@ class TestTraceRoute:
                 return []
             if "CloudWANAttachment" in cypher and "ATTACHED_TO" in cypher:
                 return [{
-                    "seg_name": "SLINGCoreBeta",
+                    "seg_name": "AppCoreBeta",
                     "seg_arn": "arn:seg:1",
                     "att_id": "att-1",
                 }]

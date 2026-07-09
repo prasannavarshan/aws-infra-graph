@@ -399,8 +399,8 @@ class TestCloudWANPolicy:
     def test_cross_segment_path_only_via_policy(self):
         """Two attachments in isolated segments are connected only via policy.
 
-        Scenario: GIL on-prem attachment in OnPremWAN segment,
-        Slingcore Beta attachment in SegmentDevelopment segment.
+        Scenario: OnPrem attachment in OnPremWAN segment,
+        AppBeta attachment in SegmentDevelopment segment.
         SharedSegments is empty on both — only the policy segment-action
         share rule connects them. Without policy fetch, no CONNECTS_TO
         edge exists and the path is broken.
@@ -444,19 +444,19 @@ class TestCloudWANPolicy:
                 {"Key": "Name", "Value": "GIL-OnPrem"},
             ],
         }
-        sling_attachment = {
-            "AttachmentId": "att-slingcore-beta",
+        app_attachment = {
+            "AttachmentId": "att-appcore-beta",
             "CoreNetworkId": "core-network-001",
             "AttachmentType": "VPC",
             "SegmentName": "SegmentDevelopment",
             "ResourceArn": (
-                "arn:aws:ec2:us-west-2:222:vpc/vpc-sling"
+                "arn:aws:ec2:us-west-2:222:vpc/vpc-app"
             ),
             "OwnerAccountId": "222222222222",
             "EdgeLocation": "us-west-2",
             "State": "AVAILABLE",
             "Tags": [
-                {"Key": "Name", "Value": "SlingcoreBeta"},
+                {"Key": "Name", "Value": "AppCoreBeta"},
             ],
         }
         policy = {
@@ -474,7 +474,7 @@ class TestCloudWANPolicy:
         collector = _make_collector(
             core_networks=[SAMPLE_CORE_NETWORK_SUMMARY],
             core_network_detail=cn_detail,
-            attachments=[gil_attachment, sling_attachment],
+            attachments=[gil_attachment, app_attachment],
             policy_document=policy,
         )
         nodes, edges = collector.collect()
@@ -490,8 +490,8 @@ class TestCloudWANPolicy:
         assert connects[0].properties["type"] == "segment_action"
 
         # Verify the full traversable path exists:
-        # GIL att -> PART_OF -> OnPremWAN -> CONNECTS_TO
-        #   -> SegmentDevelopment <- PART_OF <- Sling att
+        # OnPrem att -> PART_OF -> OnPremWAN -> CONNECTS_TO
+        #   -> SegmentDevelopment <- PART_OF <- App att
         node_arns = {n.arn for n in nodes}
         edge_map = {
             (e.source_arn, e.target_arn): e.relationship.value
@@ -502,16 +502,16 @@ class TestCloudWANPolicy:
             "arn:aws:networkmanager::111111111111"
             ":attachment/att-gil-onprem"
         )
-        sling_arn = (
+        app_arn = (
             "arn:aws:networkmanager::222222222222"
-            ":attachment/att-slingcore-beta"
+            ":attachment/att-appcore-beta"
         )
         onprem_seg_arn = (
             "arn:aws:networkmanager::123456789012"
             ":core-network/core-network-001"
             "/segment/OnPremWAN"
         )
-        sling_seg_arn = (
+        app_seg_arn = (
             "arn:aws:networkmanager::123456789012"
             ":core-network/core-network-001"
             "/segment/SegmentDevelopment"
@@ -519,17 +519,17 @@ class TestCloudWANPolicy:
 
         # All nodes exist
         assert gil_arn in node_arns
-        assert sling_arn in node_arns
+        assert app_arn in node_arns
         assert onprem_seg_arn in node_arns
-        assert sling_seg_arn in node_arns
+        assert app_seg_arn in node_arns
 
         # Path edges exist
         assert edge_map[(gil_arn, onprem_seg_arn)] == "PART_OF"
         assert edge_map[
-            (onprem_seg_arn, sling_seg_arn)
+            (onprem_seg_arn, app_seg_arn)
         ] == "CONNECTS_TO"
         assert edge_map[
-            (sling_arn, sling_seg_arn)
+            (app_arn, app_seg_arn)
         ] == "PART_OF"
 
     def test_cross_segment_path_missing_without_policy(self):

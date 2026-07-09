@@ -246,7 +246,7 @@ class TestResolveResource:
             [eks_row],   # strategy 2: all-tokens hit
         ]
         hint = ResourceHint(
-            label="EKSCluster", name_query="dany beta",
+            label="EKSCluster", name_query="app beta",
         )
         result = await _resolve_resource(neo4j, hint)
         assert isinstance(result, ResolvedResource)
@@ -299,7 +299,7 @@ class TestResolveResource:
         row = _make_resource_row(name="prod-api-beta-nv-1")
         neo4j.query.return_value = [row]
         hint = ResourceHint(
-            label="EKSCluster", name_query="dany-beta",
+            label="EKSCluster", name_query="app-beta",
         )
         result = await _resolve_resource(neo4j, hint)
         assert isinstance(result, ResolvedResource)

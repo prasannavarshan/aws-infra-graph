@@ -539,7 +539,7 @@ class TestFormatRouteVerification:
             "total_routes": 47,
             "segment_route_counts": {
                 "SegmentSharedWAN": 23,
-                "SLINGShared": 12,
+                "AppShared": 12,
                 "_unknown": 12,
             },
             "error": None,

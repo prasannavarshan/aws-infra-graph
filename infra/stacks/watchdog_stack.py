@@ -1,4 +1,4 @@
-"""Watchdog stack: detects Neo4j DatabaseUnavailable and notifies GChat."""
+"""Watchdog stack: detects Neo4j DatabaseUnavailable and posts a webhook alert."""
 
 from __future__ import annotations
 
@@ -21,21 +21,21 @@ _ALARM_THRESHOLD = 1
 
 
 class WatchdogStack(cdk.Stack):
-    """Monitors Neo4j health via log metric filter and notifies GChat.
+    """Monitors Neo4j health via log metric filter and posts a webhook alert.
 
     Flow:
       mcp-server log → metric filter ("DatabaseUnavailable")
         → CloudWatch Alarm
           → SNS → Lambda
-            → GChat webhook  (notify with context)
+            → webhook  (notify with context)
 
     ECS restart was removed: Neo4j now runs on a separate EC2 instance, so
     restarting ECS has no effect on Neo4j availability. The right remediation
     is to SSH into the Neo4j EC2 via SSM and run `systemctl restart neo4j`.
 
     The Lambda runs inside the VPC (private subnets have NAT → internet via
-    central network account), so it can reach the public GChat webhook URL.
-    The GChat webhook URL is read at runtime from Secrets Manager.
+    central network account), so it can reach the webhook URL.
+    The webhook URL is read at runtime from Secrets Manager.
     """
 
     def __init__(
@@ -50,14 +50,14 @@ class WatchdogStack(cdk.Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # GChat webhook secret — must be pre-created before deploying this stack:
+        # Notification webhook secret — must be pre-created before deploying this stack:
         #   aws secretsmanager create-secret \
-        #     --name aws-infra-graph/gchat-webhook \
-        #     --secret-string "https://chat.googleapis.com/v1/spaces/..." \
+        #     --name aws-infra-graph/notification-webhook \
+        #     --secret-string "https://your-webhook-endpoint.example.com/..." \
         #     --profile your-aws-profile --region us-east-1
-        gchat_secret = secretsmanager.Secret.from_secret_name_v2(
-            self, "GChatWebhook",
-            secret_name="aws-infra-graph/gchat-webhook",
+        webhook_secret = secretsmanager.Secret.from_secret_name_v2(
+            self, "NotificationWebhook",
+            secret_name="aws-infra-graph/notification-webhook",
         )
 
         # --- Log metric filter on the mcp-server log stream ---
@@ -95,7 +95,7 @@ class WatchdogStack(cdk.Stack):
         topic = sns.Topic(self, "WatchdogTopic", display_name="infra-graph-watchdog")
         alarm.add_alarm_action(cw_actions.SnsAction(topic))
 
-        # Lambda SG: allow HTTPS out via NAT (GChat + Secrets Manager)
+        # Lambda SG: allow HTTPS out via NAT (webhook + Secrets Manager)
         lambda_sg = ec2.SecurityGroup(
             self, "WatchdogLambdaSg",
             vpc=vpc,
@@ -122,7 +122,7 @@ class WatchdogStack(cdk.Stack):
             vpc_subnets=subnets,
             security_groups=[lambda_sg],
             environment={
-                "GCHAT_SECRET_NAME": "aws-infra-graph/gchat-webhook",
+                "WEBHOOK_SECRET_NAME": "aws-infra-graph/notification-webhook",
             },
             code=lambda_.Code.from_inline(_LAMBDA_CODE),
         )
@@ -130,14 +130,14 @@ class WatchdogStack(cdk.Stack):
         watchdog_fn.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["secretsmanager:GetSecretValue"],
-                resources=[gchat_secret.secret_arn],
+                resources=[webhook_secret.secret_arn],
             ),
         )
 
         topic.add_subscription(subs.LambdaSubscription(watchdog_fn))
 
 
-# Inline Lambda — reads GChat URL from Secrets Manager, posts alert.
+# Inline Lambda — reads webhook URL from Secrets Manager, posts alert.
 # No ECS restart: Neo4j is on EC2, restarting ECS does not fix it.
 # Manual remediation: SSM into Neo4j EC2, run `systemctl restart neo4j`.
 _LAMBDA_CODE = """
@@ -149,7 +149,7 @@ import urllib.error
 from datetime import datetime, timezone
 
 def handler(event, context):
-    secret   = os.environ["GCHAT_SECRET_NAME"]
+    secret   = os.environ["WEBHOOK_SECRET_NAME"]
     region   = os.environ.get("AWS_REGION", "us-east-1")
     now_utc  = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
@@ -173,7 +173,7 @@ def handler(event, context):
     )
     try:
         urllib.request.urlopen(req, timeout=10)
-        print(f"watchdog: gchat notified at {now_utc}")
+        print(f"watchdog: webhook notified at {now_utc}")
     except urllib.error.URLError as e:
-        print(f"gchat notify failed: {e}")
+        print(f"webhook notify failed: {e}")
 """

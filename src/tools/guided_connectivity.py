@@ -96,7 +96,7 @@ async def guided_connectivity_check(
         port: Destination port to check (default 443).
         protocol: Protocol — tcp, udp, icmp (default tcp).
         source_account: Optional account name or ID to
-            narrow source search (e.g., "slingcore beta").
+            narrow source search (e.g., "prod app account").
         target_account: Optional account name or ID to
             narrow target search.
         live_refresh: If True, fetch fresh SG rules from
