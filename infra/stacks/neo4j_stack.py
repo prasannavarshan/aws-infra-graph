@@ -211,7 +211,7 @@ class Neo4jStack(cdk.Stack):
             role=role,
             user_data=user_data,
             require_imdsv2=True,
-            # SCP DTCTSCP009 denies ec2:RunInstances when AssociatePublicIpAddress
+            # An org SCP may deny ec2:RunInstances when AssociatePublicIpAddress
             # is absent or true. Explicitly set it false via the launch template.
             associate_public_ip_address=False,
             block_devices=[
