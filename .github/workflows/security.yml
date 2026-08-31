@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -30,10 +31,12 @@ jobs:
 
       # .gitleaks.toml extends the default ruleset and allowlists one known
       # false positive (a dummy k8s token in a test fixture that base64-decodes
-      # to "test-token"). Pinned by commit SHA.
+      # to "test-token"). Pinned by commit SHA. gitleaks-action v3 requires
+      # GITHUB_TOKEN to scan pull_request events.
       - name: gitleaks
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
 
   deps:
@@ -52,12 +55,15 @@ jobs:
       - name: Set up Python
         run: uv python install 3.12
 
-      # Audit the fully resolved dependency set against the OSV/PyPI advisory
-      # database. --strict fails the job on any known vulnerability; the report
-      # names the package and the advisory so a fix is a version bump.
+      # Audit the resolved dependency set against the OSV/PyPI advisory
+      # database. No --frozen: on a Dependabot PR the lockfile is stale relative
+      # to the bumped pyproject.toml (and Dependabot omits the gitignored lock
+      # entirely), so we resolve fresh against the current manifest — which is
+      # exactly the set we want to audit. --strict fails the job on any known
+      # vulnerability; the report names the package and advisory.
       - name: pip-audit
         run: |
-          uv sync --all-extras --frozen
+          uv sync --all-extras
           uvx pip-audit --strict
 
   workflows:

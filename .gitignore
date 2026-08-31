@@ -36,9 +36,6 @@ data/*.json
 data/*.pkl
 *.zip
 
-# uv
-uv.lock
-
 # Claude local settings (personal, not shared)
 .claude/settings.local.json
 CLAUDE.local.md
