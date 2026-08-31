@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Python dependencies (pyproject.toml + uv.lock).
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # Pinned GitHub Actions — Dependabot proposes SHA bumps with the new version
+  # in the PR body, so the pin stays current without losing SHA pinning.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

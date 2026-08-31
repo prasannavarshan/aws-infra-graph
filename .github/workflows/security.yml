@@ -1,0 +1,87 @@
+name: security
+
+# Server-side security gate for a public repo that had no CI. Three jobs:
+# secret scanning, dependency vulnerability scanning, and workflow linting.
+#
+# CONVERT-TO-REUSABLE: to centralise across repos later, replace the on: block
+# with `on: { workflow_call: {} }` and call it from a stub. The secrets and
+# workflows jobs are identical to update-toolchain's; only the deps job is
+# Python-specific.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+# Deny by default; each job takes only what it needs.
+permissions: {}
+
+jobs:
+  secrets:
+    name: secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history so gitleaks scans every commit, not just the tip.
+          fetch-depth: 0
+
+      # .gitleaks.toml extends the default ruleset and allowlists one known
+      # false positive (a dummy k8s token in a test fixture that base64-decodes
+      # to "test-token"). Pinned by commit SHA.
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  deps:
+    name: dependency scan (pip-audit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # uv is the project's package manager (uv.lock is committed). Pinned by
+      # commit SHA like every other action.
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      # Audit the fully resolved dependency set against the OSV/PyPI advisory
+      # database. --strict fails the job on any known vulnerability; the report
+      # names the package and the advisory so a fix is a version bump.
+      - name: pip-audit
+        run: |
+          uv sync --all-extras --frozen
+          uvx pip-audit --strict
+
+  workflows:
+    name: workflow lint (actionlint)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # actionlint as a pinned, checksum-verified release binary — verify what
+      # you pulled down, and keep the trusted third-party action set small.
+      - name: Install actionlint (pinned + checksum-verified)
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+          ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        run: |
+          set -euo pipefail
+          base="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}"
+          file="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "$file" "${base}/${file}"
+          echo "${ACTIONLINT_SHA256}  ${file}" | sha256sum -c -
+          tar -xzf "$file" actionlint
+          chmod +x actionlint
+
+      - name: actionlint
+        run: ./actionlint -color

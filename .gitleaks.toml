@@ -1,0 +1,21 @@
+# gitleaks configuration for aws-infra-graph.
+#
+# Extends the built-in ruleset (does not replace it) and adds one narrow
+# allowlist entry for a known false positive: a dummy Kubernetes bearer token
+# in a unit-test fixture. The token value base64-decodes to the literal string
+# "test-token", and the surrounding credentials are AWS's own published
+# documentation example values (the well-known "...EXAMPLE"-suffixed access key
+# and secret that appear throughout the AWS docs).
+#
+# The exception is scoped to the specific rule + file so it cannot hide a real
+# secret introduced elsewhere.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+[rules.allowlist]
+description = "Dummy k8s bearer token in test fixture (decodes to 'test-token')"
+paths = ['''tests/test_k8s_auth\.py''']
+regexes = ['''k8s-aws-v1\.dGVzdC10b2tlbg''']
